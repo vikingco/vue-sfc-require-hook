@@ -1,0 +1,10 @@
+{
+  "name": "vue-sfc-require-hook",
+  "version": "1.0.0",
+  "description": "Require hook for including vue single file components",
+  "main": "index.js",
+  "repository": "git@github.com:vikingco/vue-sfc-require-hook.git",
+  "author": "Joeri Hendrickx <joeri.hendrickx@unleashed.be>",
+  "license": "MIT",
+  "private": true
+}

@@ -49,15 +49,7 @@ module.exports = function generateCode(
     }
 
     if (stylesResult) {
-        const styleStr = stylesResult
-            .map(
-                ({ code, moduleName }) => `if(!this['${moduleName}']) {\n` +
-                    `  this['${moduleName}'] = {};\n` +
-                    `}\n` +
-                    `this['${moduleName}'] = Object.assign(\n` +
-                    `this['${moduleName}'], ${code});\n`,
-            )
-            .join('');
+        const styleStr = stylesResult;
         if (isFunctional) {
             output +=
                 `;(function() {\n` +

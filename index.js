@@ -4,6 +4,7 @@
 const splitRE = /\r?\n/g;
 
 const babel = require('@babel/core');
+const path = require('path');
 const compilerUtils = require('@vue/component-compiler-utils');
 const VueTemplateCompiler = require('vue-template-compiler');
 const generateSourceMap = require('./generate-source-map');
@@ -12,9 +13,18 @@ const processCustomBlocks = require('./process-custom-blocks');
 const logResultErrors = require('./utils').logResultErrors;
 const stripInlineSourceMap = require('./utils').stripInlineSourceMap;
 const loadSrc = require('./utils').loadSrc;
+const escapeRegex = require('./utils').escapeRegex;
 const generateCode = require('./generate-code');
 
-function renderSfc(babelConfig) {
+/**
+ * Factory function yielding a function that reads a .vue file and outputs a javascript source string.  The
+ * resulting JS will create dom nodes and create a functional component.  Any resulting styles will be loaded
+ * by invoking window.loadStyleSheet.
+ *
+ * @param babelConfig Configration for babel.  This will be used to transform the script part of the vue file.
+ * @param stylePrelude stylesheet that is prefixed to all other stylesheets.
+ **/
+function renderSfc(babelConfig, stylePrelude) {
 
     function processScript(scriptPart, filePath) {
         if (!scriptPart) {
@@ -78,19 +88,18 @@ function renderSfc(babelConfig) {
             return null;
         }
 
-        const filteredStyles = styles
-            .filter((style) => style.module)
+        return styles
             .map((style) => ({
                 code: _processStyle(style, filename, config),
-                moduleName: style.module === true ? '$style' : style.module,
-            }));
-
-        return filteredStyles.length ? filteredStyles : null;
+                moduleName: style.module === true ? '$style' : style.module ?? filename+'__style',
+            }))
+            .map(({ code, moduleName }) => `window.loadStyleSheet(${JSON.stringify(moduleName)}, ${JSON.stringify(code)});`)
+            .join('\n')
     }
 
     return (src, filename) => {
-
-        const config = {};
+        const moduleNameMapper = moduleMapperConfigFromBabel(babelConfig);
+        const config = { moduleNameMapper, stylePrelude };
 
         const descriptor = compilerUtils.parse({
             source: src,
@@ -141,3 +150,20 @@ function renderSfc(babelConfig) {
 
 }
 module.exports = { renderSfc };
+
+/**
+ * From babel's alias config, extract a module name mappign so that it can be applies to modules appearing in css.
+ * If no alias config is present, no mapping will be used.
+ */
+function moduleMapperConfigFromBabel(babelConfig) {
+    const moduleNameMapper = [];
+
+    const aliasConfig = babelConfig.plugins
+        ?.filter(([name, config]) => name === 'babel-plugin-module-resolver')
+        ?.[0]?.[1]?.alias ?? {};
+
+    for ([key, value] of Object.entries(aliasConfig)) {
+        moduleNameMapper.push([new RegExp('^' + escapeRegex(key) + '/(.*)'), path.join(process.cwd(), value) + '/$1']);
+    }
+    return moduleNameMapper;
+}

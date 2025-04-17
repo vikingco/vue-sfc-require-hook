@@ -28,6 +28,10 @@ const warn = function warn(msg) {
     console.warn(chalk.red('\n[vue-jest]: ' + msg + '\n'))
 }
 
+function escapeRegex(string) {
+    return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
 const transformContent = function transformContent(
     content,
     filePath,
@@ -121,7 +125,7 @@ const stripInlineSourceMap = function(str) {
 const logResultErrors = result => {
     if (result.errors.length) {
         result.errors.forEach(function(msg) {
-            console.error('\n' + chalk.red(msg) + '\n')
+            console.error('\n' + chalk.red(msg) + '\n'+msg.stack)
         })
         throwError('Vue template compilation failed')
     }
@@ -151,5 +155,6 @@ module.exports = {
     warn,
     resolvePath,
     fetchTransformer,
-    loadSrc
+    loadSrc,
+    escapeRegex,
 }

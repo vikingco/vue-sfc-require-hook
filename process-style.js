@@ -69,6 +69,7 @@ module.exports = function processStyle(stylePart, filePath, config = {}) {
 
     function postProcess(code) {
         code = inlineStaticImports(code);
+        code = adaptAssetUrls(code);
         return code;
     }
 
@@ -79,6 +80,13 @@ module.exports = function processStyle(stylePart, filePath, config = {}) {
             const filePath = applyModuleNameMapper(file, stylePart.src, config, stylePart.lang);
             const fileContent = fs.readFileSync(filePath, 'utf-8');
             return fileContent;
+        });
+    }
+
+    function adaptAssetUrls(code) {
+        const regex = /"~([^"]+)"/g;
+        return code.replace(regex, (match, file) => {
+            return '"'+(config.transformAssetUrl?.(file) ?? file)+'"';
         });
     }
 };

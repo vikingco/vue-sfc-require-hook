@@ -70,6 +70,7 @@ module.exports = function processStyle(stylePart, filePath, config = {}) {
     function postProcess(code) {
         code = inlineStaticImports(code);
         code = adaptAssetUrls(code);
+        code = removeVDeep(code);
         return code;
     }
 
@@ -88,5 +89,9 @@ module.exports = function processStyle(stylePart, filePath, config = {}) {
         return code.replace(regex, (match, file) => {
             return '"'+(config.transformAssetUrl?.(file) ?? file)+'"';
         });
+    }
+
+    function removeVDeep(code) {
+        return code.replace(/::v-deep/g, '');
     }
 };

@@ -46,6 +46,10 @@ module.exports = function processStyle(stylePart, filePath, config = {}) {
         return '{}';
     }
 
+    if (!stylePart.src && config.wrappingSelector && !stylePart.content.includes(config.wrappingSelector)) {
+        stylePart.content = `${config.wrappingSelector} { \n${stylePart.content}\n }`;
+    }
+
     console.log(`Processing style part: ${filePath} with prelude ${config.stylePrelude}`);
 
     let content = (config.stylePrelude ?? '') + stylePart.content;

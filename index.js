@@ -24,7 +24,7 @@ const generateCode = require('./generate-code');
  * @param babelConfig Configration for babel.  This will be used to transform the script part of the vue file.
  * @param stylePrelude stylesheet that is prefixed to all other stylesheets.
  **/
-function renderSfc(babelConfig, { stylePrelude, transformAssetUrl, wrappingSelector }) {
+function renderSfc(babelConfig, { stylePrelude, transformAssetUrl, transformTemplateAssetUrls, wrappingSelector } = {}) {
 
     function processScript(scriptPart, filePath) {
         if (!scriptPart) {
@@ -52,7 +52,9 @@ function renderSfc(babelConfig, { stylePrelude, transformAssetUrl, wrappingSelec
             template.content = loadSrc(template.src, filename);
         }
 
-        const userTemplateCompilerOptions = {};
+        const userTemplateCompilerOptions = {
+            transformAssetUrls: transformTemplateAssetUrls,
+        };
 
         try {
 
